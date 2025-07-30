@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MVCWinFormsMasterDetail
 {
-    public class Pracownik
+    public class Pracownik:ICloneable
     {
         public Pracownik(int idPracownika, string nazwisko, string imie) 
         {
@@ -17,6 +17,10 @@ namespace MVCWinFormsMasterDetail
         public int IdPracownika { get; set; }
         public string Nazwisko { get; set; }
         public string Imie {  get; set; }
-
+        public object Clone()
+        {
+            Pracownik other = (Pracownik)MemberwiseClone();
+            return other;
+        }
     }
 }

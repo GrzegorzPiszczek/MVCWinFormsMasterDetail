@@ -23,7 +23,8 @@ namespace MVCWinFormsMasterDetail
         {
             _state = new PrzegladanieGrupaPracowniczaState(this);
             InitializeComponent();
-        } 
+            btnEditGrupaPracownicza.Enabled = false;
+        }
 
         #region IGrupyPracowniczeView_MethodsNeededToManipulateView
         public void SetController(GrupyPracowniczeController controller)
@@ -36,15 +37,24 @@ namespace MVCWinFormsMasterDetail
             get { return _state; }
             set { _state = value; }
         }
-        public void UpdateState()
+        public void UpdateStatusBarState()
         {
             this.Text = _state.ToString();
         }
-        
-        public int GrupaPracowniczaID 
+        public int GrupaPracowniczaID
         {
-            get { return Convert.ToInt32(tbIDGrupaPracownicza.Text); }
-            set { tbIDGrupaPracownicza.Text = value.ToString(); } 
+            get
+            {
+                if (int.TryParse(tbIDGrupaPracownicza.Text, out int result))
+                {
+                    return result;
+                }
+                return 0;
+            }
+            set
+            {
+                tbIDGrupaPracownicza.Text = value.ToString();
+            }
         }
         public string GrupaPracowniczaNazwa
         {
@@ -126,11 +136,20 @@ namespace MVCWinFormsMasterDetail
         }
         public void SetSelectedInGrid(GrupaPracownicza grupaPracownicza)
         {
-            foreach (ListViewItem row in this.lvGrupyPracownicze.Items)
+            if (lvGrupyPracownicze.SelectedItems.Count == 1 &&
+                lvGrupyPracownicze.SelectedItems[0].Text == grupaPracownicza.IdGrupyPracowniczej.ToString())
+            {
+                return; // No change needed
+            }
+
+            lvGrupyPracownicze.SelectedItems.Clear();
+            foreach (ListViewItem row in lvGrupyPracownicze.Items)
             {
                 if (row.Text == grupaPracownicza.IdGrupyPracowniczej.ToString())
                 {
                     row.Selected = true;
+                    row.Focused = true;
+                    break;
                 }
             }
         }
@@ -206,11 +225,20 @@ namespace MVCWinFormsMasterDetail
         }
         public void SetSelectedInGrid(Pracownik pracownik)
         {
-            foreach (ListViewItem row in this.lvPracownicy.Items)
+            if (lvPracownicy.SelectedItems.Count == 1 &&
+                lvPracownicy.SelectedItems[0].Text == pracownik.IdPracownika.ToString())
+            {
+                return; 
+            }
+
+            lvPracownicy.SelectedItems.Clear(); 
+            foreach (ListViewItem row in lvPracownicy.Items)
             {
                 if (row.Text == pracownik.IdPracownika.ToString())
                 {
                     row.Selected = true;
+                    row.Focused = true;
+                    break;
                 }
             }
         }
@@ -220,9 +248,25 @@ namespace MVCWinFormsMasterDetail
         }
         public void HideEditGroupBoxPracownicy()
         {
-            pnEditPracownik.Visible = true;//= false;
+            pnEditPracownik.Visible = false;
         }
         #endregion 
+        public GroupBox GroupBoxGrupaPracowniczaEditButtons()
+        { 
+            return this.gbGrupaPracowniczaEditButtons;
+        }
+        public Panel PanelPracownikEditButtons()
+        {
+            return this.pnPracownikEditButtons;
+        }
+        public Panel PanelGrupaPracowniczaSaveButtons()
+        {
+            return this.pnGrupaPracowniczaSaveButtons;
+        }
+        public Panel PanelPracownikSaveButtons()
+        {
+            return this.pnPracownikSaveButtons;
+        }
 
         #region EventsDelagatedToController
         private void btnAddGrupaPracownicza_Click(object sender, EventArgs e)
@@ -239,8 +283,11 @@ namespace MVCWinFormsMasterDetail
         }
         private void lvGrupyPracownicze_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (this.lvGrupyPracownicze.SelectedItems.Count > 0)
-                this._controller.SelectedGrupaPracowniczaChanged(this.lvGrupyPracownicze.SelectedItems[0].Text);
+            btnEditGrupaPracownicza.Enabled = lvGrupyPracownicze.SelectedItems.Count > 0;
+            if (lvGrupyPracownicze.SelectedItems.Count > 0)
+            {
+                _controller.SelectedGrupaPracowniczaChanged(lvGrupyPracownicze.SelectedItems[0].Text);
+            }
         }
         private void btnSaveGrupaPracownicza_Click(object sender, EventArgs e)
         {
