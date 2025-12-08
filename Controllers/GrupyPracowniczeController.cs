@@ -252,11 +252,8 @@ namespace MVCWinFormsMasterDetail
         }
         public void AddPracownik()
         {
-            var pracownik = new Pracownik(0, "", "");
-            _selectedPracownik = pracownik;
-            _editedPracownik = (Pracownik)_selectedPracownik.Clone();
+            _editedPracownik = new Pracownik(0, "", "");
             this.UpdateViewWithPracownikValues(_editedPracownik);
-            
             _view.State.AddPracownikClick();
         }
         public void EditPracownik()
@@ -283,7 +280,7 @@ namespace MVCWinFormsMasterDetail
                     {
                         var newForSelect = _editedGrupaPracownicza.Pracownicy.ElementAtOrDefault(deletedIndex)
                             ?? _editedGrupaPracownicza.Pracownicy.LastOrDefault();
-                        _view.SetSelectedInGrid(_editedGrupaPracownicza.Pracownicy[deletedIndex]); //invoke Selection change
+                        _view.SetSelectedInGrid(newForSelect); //invoke Selection change
                     }
                     else
                     {
@@ -294,7 +291,7 @@ namespace MVCWinFormsMasterDetail
             }
 
         }
-        public void SaveEditPracownik() 
+        public void SavePracownik() 
         {
             UpdatePracownikWithViewValues(_editedPracownik);
             if (IsNewPracownik())
@@ -322,7 +319,15 @@ namespace MVCWinFormsMasterDetail
         }
         public void CancelEditPracownik()
         {
-            _editedPracownik = (Pracownik)_selectedPracownik.Clone();
+            if (_selectedPracownik != null)
+            {
+                _editedPracownik = (Pracownik)_selectedPracownik.Clone();
+            }
+            else
+            {
+                _editedPracownik = new Pracownik(0, "", "");
+            }
+            UpdateViewWithPracownikValues(_editedPracownik);
             _view.State.CancelPracownikClick();
         }
         #endregion

@@ -68,7 +68,7 @@ namespace MVCWinFormsMasterDetailTests
 
             controller.SelectedGrupaPracowniczaChanged(changedId);
             controller.EditGrupaPracownicza();
-            controller.EditedGrupaPracownicza.NazwaGrupyPracowniczej = newName;
+            view.GrupaPracowniczaNazwa = newName;
             controller.SaveGrupaPracownicza();
 
             var grupaPracownicza = grupyPracownicze.SingleOrDefault(w => w.IdGrupyPracowniczej.ToString() == changedId);
@@ -90,7 +90,7 @@ namespace MVCWinFormsMasterDetailTests
 
             controller.SelectedGrupaPracowniczaChanged(changedId);
             controller.EditGrupaPracownicza();
-            controller.EditedGrupaPracownicza.NazwaGrupyPracowniczej = newName;
+            view.GrupaPracowniczaNazwa = newName;
             controller.CancelGrupaPracownicza();
 
             var grupaPracownicza = grupyPracownicze.SingleOrDefault(w => w.IdGrupyPracowniczej.ToString() == changedId);
@@ -113,47 +113,72 @@ namespace MVCWinFormsMasterDetailTests
             Assert.IsTrue(grupyPracownicze.Count == 2);
         }
         [TestMethod]
+        public void DodajGrupaPracowniczaDodajPracownika()
+        {
+            string nazwaGrupyPracowniczej = "SOR";
+            string imiePracownika = "Karol";
+            string nazwiskoPracownika = "Nowak";
+            
+            var view = new FrmGrupyPracownicze();
+            var grupyPracownicze = new List<GrupaPracownicza>();
+            var controller = new GrupyPracowniczeController(view, grupyPracownicze);
+
+            controller.AddGrupaPracownicza();
+            view.GrupaPracowniczaNazwa = nazwaGrupyPracowniczej;
+            controller.AddPracownik();
+            view.PracownikImie = imiePracownika;
+            view.PracownikNazwisko = nazwiskoPracownika;
+            controller.SavePracownik();
+            controller.SaveGrupaPracownicza();
+
+            Assert.IsTrue(grupyPracownicze[0].NazwaGrupyPracowniczej == nazwaGrupyPracowniczej &&
+                        grupyPracownicze[0].Pracownicy.Count == 1);
+        }
+        [TestMethod]
         public void EdytujGrupaPracowniczaDodajPracownika()
         {
             FrmGrupyPracownicze view = new FrmGrupyPracownicze();
             var grupyPracownicze = new List<GrupaPracownicza>();
-            grupyPracownicze.Add(new GrupaPracownicza(1, "Nowak Piotr"));
-            grupyPracownicze.Add(new GrupaPracownicza(2, "Nowak Adam"));
+            grupyPracownicze.Add(new GrupaPracownicza(1, "Apteka"));
+            grupyPracownicze.Add(new GrupaPracownicza(2, "Oddział Rehabilitacji"));
             var controller = new GrupyPracowniczeController(view, grupyPracownicze);
-            
             controller.SelectedGrupaPracowniczaChanged("2");
             controller.EditGrupaPracownicza();
             controller.AddPracownik();
-            //view.PracownikID = 3;
-            view.PracownikImie = "Piotr";
-            view.PracownikNazwisko = "Nowak";
-            controller.SaveEditPracownik();
+            controller.EditedPracownik.Imie = "Piotr";
+            controller.EditedPracownik.Nazwisko = "Nowak";
+            controller.SavePracownik();
+            controller.SaveGrupaPracownicza();
             Assert.IsTrue(grupyPracownicze[1].Pracownicy.Count == 1);
         }
         [TestMethod]
-        public void GrupaPracowniczaDodajPracownika()
+        public void EdytujGrupaPracowniczaUsunPracownika()
         {
-            var view = new FrmGrupyPracownicze();
+            FrmGrupyPracownicze view = new FrmGrupyPracownicze();
             var grupyPracownicze = new List<GrupaPracownicza>();
-            var grupaPracownicza = new GrupaPracownicza();
-            grupaPracownicza.IdGrupyPracowniczej = 10;
-            grupaPracownicza.NazwaGrupyPracowniczej = "Apteka";
-            grupyPracownicze.Add(grupaPracownicza);
+
+            grupyPracownicze.Add(new GrupaPracownicza(1, "Apteka"));
+            var grupaZPracownikami = new GrupaPracownicza(2, "Oddział Rehabilitacji");
+            grupaZPracownikami.Pracownicy.Add(new Pracownik(11, "Nowak", "Janusz"));
+            grupaZPracownikami.Pracownicy.Add(new Pracownik(12, "Kowalski", "Zbigniew"));
+            grupyPracownicze.Add(grupaZPracownikami);
             var controller = new GrupyPracowniczeController(view, grupyPracownicze);
-            controller.SelectedGrupaPracowniczaChanged("10");
+
+            controller.SelectedGrupaPracowniczaChanged("2");
             controller.EditGrupaPracownicza();
-            controller.AddPracownik();
-            //controller.EditedPracownik
+            controller.SelectedPracownikChanged("12");
+            controller.RemovePracownik();
+            controller.SaveGrupaPracownicza();
+            
+            Assert.IsTrue(grupyPracownicze[1].Pracownicy.Count == 1);
         }
         [TestMethod]
         public void GrupaPracowniczaTestKopii()
         {
-            bool pozycjeKopii = false;
-
             GrupaPracownicza grupa = new GrupaPracownicza();
             grupa.IdGrupyPracowniczej = 10;
             grupa.NazwaGrupyPracowniczej = "Apteka";
-            //pozycje
+
             var pracownik1 = new Pracownik(1, "Nowak", "Janusz");
             var pracownik2 = new Pracownik(2, "Kowalski", "Zbigniew");
             var pracownik3 = new Pracownik(3, "Nowak", "Ania");
@@ -172,9 +197,11 @@ namespace MVCWinFormsMasterDetailTests
         public void PracownikTestKopii()
         {
             Pracownik pracownik = new Pracownik(2,"Kowalski","Tadeusz");
-            var kopia = pracownik.Clone();
-            bool same = ReferenceEquals(pracownik, kopia);
-            Assert.IsTrue(same);
+            Pracownik kopia = (Pracownik)pracownik.Clone();
+            
+            Assert.IsTrue(kopia.Nazwisko == pracownik.Nazwisko &&
+                            kopia.Imie == pracownik.Imie &&
+                            kopia.IdPracownika == pracownik.IdPracownika);
         }
     }
 }
